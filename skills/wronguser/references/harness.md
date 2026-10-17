@@ -4,7 +4,7 @@ Load this when writing the step-2 tests. Every recipe has the same shape as SKIL
 
 ## Supabase / Postgres RLS (pgTAP)
 
-Put the file at `supabase/tests/database/nosy_<table>.test.sql` and run it with `supabase test db`. This needs the local stack (`supabase start`); ask before starting it.
+Put the file at `supabase/tests/database/wronguser_<table>.test.sql` and run it with `supabase test db`. This needs the local stack (`supabase start`); ask before starting it.
 
 ```sql
 begin;
@@ -12,30 +12,30 @@ create extension if not exists pgtap with schema extensions;
 select plan(6);
 
 insert into auth.users (id, email) values
-  ('11111111-1111-1111-1111-111111111111', 'alice@nosy.test'),
-  ('22222222-2222-2222-2222-222222222222', 'nosy@nosy.test');
+  ('11111111-1111-1111-1111-111111111111', 'alice@wronguser.test'),
+  ('22222222-2222-2222-2222-222222222222', 'wronguser@wronguser.test');
 
 -- seed as the table owner (bypasses RLS on purpose)
 insert into public.videos (user_id, title) values
-  ('11111111-1111-1111-1111-111111111111', 'nosy-canary-7f3a9c'),
-  ('22222222-2222-2222-2222-222222222222', 'nosy-own-row');
-select isnt_empty($$ select 1 from public.videos where title = 'nosy-canary-7f3a9c' $$, 'control: canary seeded');
+  ('11111111-1111-1111-1111-111111111111', 'wronguser-canary-7f3a9c'),
+  ('22222222-2222-2222-2222-222222222222', 'wronguser-own-row');
+select isnt_empty($$ select 1 from public.videos where title = 'wronguser-canary-7f3a9c' $$, 'control: canary seeded');
 
--- become nosy: the app role, plus the claims the policies read
+-- become wronguser: the app role, plus the claims the policies read
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
 select is(current_user::text, 'authenticated', 'control: running as app role, not table owner');
-select isnt_empty($$ select 1 from public.videos where title = 'nosy-own-row' $$, 'control: nosy sees own row');
+select isnt_empty($$ select 1 from public.videos where title = 'wronguser-own-row' $$, 'control: wronguser sees own row');
 
-select is_empty($$ select 1 from public.videos where title = 'nosy-canary-7f3a9c' $$, 'read: nosy cannot see alice''s row');
+select is_empty($$ select 1 from public.videos where title = 'wronguser-canary-7f3a9c' $$, 'read: wronguser cannot see alice''s row');
 select throws_ok($$ insert into public.videos (user_id, title)
                     values ('11111111-1111-1111-1111-111111111111', 'planted') $$,
-                 '42501', null, 'create: nosy cannot plant rows owned by alice');
+                 '42501', null, 'create: wronguser cannot plant rows owned by alice');
 
 update public.videos set title = 'pwned' where user_id = '11111111-1111-1111-1111-111111111111';
 delete from public.videos where user_id = '11111111-1111-1111-1111-111111111111';
 reset role;  -- back to owner to inspect the damage
-select is((select count(*)::int from public.videos where title = 'nosy-canary-7f3a9c'), 1,
+select is((select count(*)::int from public.videos where title = 'wronguser-canary-7f3a9c'), 1,
           'write: alice''s row neither changed nor deleted');
 
 select * from finish();
@@ -53,38 +53,38 @@ rollback;
 Use the repo's runner (vitest, jest, `node:test`, supertest) and its local test DB. If there is a test login helper, use it. Otherwise mock **only** the function that says who the caller is. In Jest, a mocked variable must start with `mock`.
 
 ```ts
-// tests/nosy/videos.test.ts (sketch)
-let mockUser = 'nosy'
+// tests/wronguser/videos.test.ts (sketch)
+let mockUser = 'wronguser'
 vi.mock('@/lib/auth', () => ({ getUserId: async () => mockUser }))  // identity only, never the DB
 
-const CANARY = `nosy-canary-${crypto.randomUUID().slice(0, 8)}`
-let aliceVideo: string, nosyVideo: string
+const CANARY = `wronguser-canary-${crypto.randomUUID().slice(0, 8)}`
+let aliceVideo: string, wronguserVideo: string
 
 beforeAll(async () => {
   mockUser = 'alice'; aliceVideo = (await call('POST', '/api/videos', { title: CANARY })).id
-  mockUser = 'nosy';  nosyVideo  = (await call('POST', '/api/videos', { title: 'nosy-own' })).id
+  mockUser = 'wronguser';  wronguserVideo  = (await call('POST', '/api/videos', { title: 'wronguser-own' })).id
 })
 
-test('control: nosy reads own video', async () => {
-  mockUser = 'nosy'
-  expect(JSON.stringify(await call('GET', `/api/videos/${nosyVideo}`))).toContain('nosy-own')
+test('control: wronguser reads own video', async () => {
+  mockUser = 'wronguser'
+  expect(JSON.stringify(await call('GET', `/api/videos/${wronguserVideo}`))).toContain('wronguser-own')
 })
 
-test('read: alice\'s canary never reaches nosy', async () => {
-  mockUser = 'nosy'
+test('read: alice\'s canary never reaches wronguser', async () => {
+  mockUser = 'wronguser'
   expect(JSON.stringify(await call('GET', `/api/videos/${aliceVideo}`))).not.toContain(CANARY)
   expect(JSON.stringify(await call('GET', '/api/videos'))).not.toContain(CANARY)  // list
 })
 
 test('update: alice\'s row unchanged', async () => {
-  mockUser = 'nosy';  await call('PATCH', `/api/videos/${aliceVideo}`, { title: 'pwned' })
+  mockUser = 'wronguser';  await call('PATCH', `/api/videos/${aliceVideo}`, { title: 'pwned' })
   mockUser = 'alice'; expect(JSON.stringify(await call('GET', `/api/videos/${aliceVideo}`))).toContain(CANARY)
 })
 ```
 
 - `call()` is a tiny helper: invoke the route handler directly, or go through supertest. It returns the parsed body whatever the status is. The canary decides, not the status code.
 - Create alice's data through the real create path when you can. That exercises the owner assignment too.
-- Also try mass assignment: `nosy` PATCHes its own row with `{ user_id: <alice> }`, then check who owns it.
+- Also try mass assignment: `wronguser` PATCHes its own row with `{ user_id: <alice> }`, then check who owns it.
 
 ## Service functions / ORM
 

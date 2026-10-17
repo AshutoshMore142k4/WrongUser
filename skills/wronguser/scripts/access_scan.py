@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only diff triage for Nosy. Prints "look here" hints, never verdicts.
+"""Read-only diff triage for WrongUser. Prints "look here" hints, never verdicts.
 
 Usage (from the repo root):
   python access_scan.py [BASE]     # `git diff BASE` (default HEAD) + untracked files
@@ -104,7 +104,7 @@ def main(argv):
         diff += "\n" + untracked_as_diff()
     hits = scan(diff)
     if not hits:
-        print("nosy: no data-access boundary touched - not investigating.")
+        print("wronguser: no data-access boundary touched - not investigating.")
         print("checked (added, removed and untracked lines): routes, queries, owner columns, auth/middleware, "
               "RLS/policies/views, service-role, caches, storage, retrieval, mass-assign, jobs")
         return 0

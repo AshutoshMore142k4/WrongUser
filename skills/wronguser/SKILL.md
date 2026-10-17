@@ -1,9 +1,9 @@
 ---
-name: nosy
-description: Proves whether one user can read or change another user's data. Signs up a second test user ("nosy") in a local test environment, attacks the first user's resources through the app's own routes, queries, RLS policies, caches, storage and AI retrieval, and reports a ledger - GOT IN (a test that ran and failed), MIGHT GET IN (static evidence only), BLOCKED (the file:line that stops it) or NOT CHECKED. Use on a diff before merge, or as "nosy baseline" to audit an existing app. Use when asked "can other users see my data", "is my app safe to launch", or about data leaks, IDOR, broken access control, authorization, RLS / row level security, Supabase policies, or multi-tenant / tenant isolation. Not for general code review, XSS, CSRF or SQL injection, and never against deployed or production systems.
+name: wronguser
+description: Proves whether one user can read or change another user's data. Signs up a second test user ("wronguser") in a local test environment, attacks the first user's resources through the app's own routes, queries, RLS policies, caches, storage and AI retrieval, and reports a ledger - GOT IN (a test that ran and failed), MIGHT GET IN (static evidence only), BLOCKED (the file:line that stops it) or NOT CHECKED. Use on a diff before merge, or as "wronguser baseline" to audit an existing app. Use when asked "can other users see my data", "is my app safe to launch", or about data leaks, IDOR, broken access control, authorization, RLS / row level security, Supabase policies, or multi-tenant / tenant isolation. Not for general code review, XSS, CSRF or SQL injection, and never against deployed or production systems.
 ---
 
-# Nosy
+# WrongUser
 
 Suspect at the seams. Believe only red.
 
@@ -20,8 +20,8 @@ Paths like `scripts/` and `references/` are relative to this skill's folder, not
 
 ## Modes
 
-- `nosy`: the current diff. This is the default.
-- `nosy baseline`: no diff needed. Map the whole repo and write tests for the riskiest resources: private user content, payments, messages, files. If there is no diff, run this.
+- `wronguser`: the current diff. This is the default.
+- `wronguser baseline`: no diff needed. Map the whole repo and write tests for the riskiest resources: private user content, payments, messages, files. If there is no diff, run this.
 
 ## Method
 
@@ -33,14 +33,14 @@ From the repo root, run `python scripts/access_scan.py <BASE>`, giving the scrip
 
 If Python isn't available, read the diff and any untracked files yourself. Look for routes and server actions, queries, owner columns, auth middleware, RLS, policies, views and migrations, service-role or admin clients, caches, storage URLs, AI retrieval, and background jobs.
 
-If nothing is touched, print `nosy: no data-access boundary touched - not investigating.` and the list of what was checked, then stop.
+If nothing is touched, print `wronguser: no data-access boundary touched - not investigating.` and the list of what was checked, then stop.
 
 ### 1. Map, then trace
 
-**Map.** If `nosy.map.yml` exists, reuse it and only add new resources. Otherwise infer it from the schema, migrations and models:
+**Map.** If `wronguser.map.yml` exists, reuse it and only add new resources. Otherwise infer it from the schema, migrations and models:
 
 ```yaml
-# nosy.map.yml: who may touch what. confirmed: no
+# wronguser.map.yml: who may touch what. confirmed: no
 videos:    {owner: user_id, read: owner,   write: owner}
 projects:  {owner: org_id,  via: org_members, read: members, write: members}
 templates: {owner: null,    read: public,  write: none}
@@ -60,18 +60,18 @@ Rank the hypotheses: writes and deletes before reads, then service-role or admin
 
 ### 2. Harness
 
-Write tests in the repo's own framework, against a local test DB, under `tests/nosy/`. If the runner requires another folder, use that with a `nosy_` prefix (e.g. `supabase/tests/database/nosy_videos.test.sql`). Recipes for Supabase/pgTAP, HTTP routes and service functions are in `references/harness.md`. Attacks for each kind of leak are in `references/leak-catalog.md`.
+Write tests in the repo's own framework, against a local test DB, under `tests/wronguser/`. If the runner requires another folder, use that with a `wronguser_` prefix (e.g. `supabase/tests/database/wronguser_videos.test.sql`). Recipes for Supabase/pgTAP, HTTP routes and service functions are in `references/harness.md`. Attacks for each kind of leak are in `references/leak-catalog.md`.
 
 Every test file has this shape:
 
-- **Two users.** `alice` and `nosy`, in different orgs when the data belongs to a tenant. Fake *who the caller is* only at the identity boundary (`auth()`, `getUser`). Never fake an authorization check, and never fake what the data layer returns.
-- **A canary.** Alice's resource holds a unique value, such as `nosy-canary-7f3a9c`.
+- **Two users.** `alice` and `wronguser`, in different orgs when the data belongs to a tenant. Fake *who the caller is* only at the identity boundary (`auth()`, `getUser`). Never fake an authorization check, and never fake what the data layer returns.
+- **A canary.** Alice's resource holds a unique value, such as `wronguser-canary-7f3a9c`.
 - **Controls.**
   - (a) The canary row exists, checked directly.
-  - (b) `nosy` reaches *its own* resource through the same path. This proves nosy is really signed in and the path works.
+  - (b) `wronguser` reaches *its own* resource through the same path. This proves wronguser is really signed in and the path works.
   - (c) For SQL tests, the session runs as the app role (e.g. `authenticated`), not as the table owner.
 - **Attacks**, through the entry point real users hit: read, list, search, update, delete, export, and creating a row with alice's owner id.
-  - A read leaks if the canary appears in what nosy gets back.
+  - A read leaks if the canary appears in what wronguser gets back.
   - A write leaks if alice's row actually changed.
   - Check by re-reading the row, not by status code. Supabase returns success with zero rows when RLS blocks an update.
 
@@ -81,7 +81,7 @@ Budget after the gate: about 5 hypotheses, about 3 test files, and about 20 tool
 
 ### 3. Prove
 
-If nosy tests existed before this run, run them first. An old nosy test that is now red is a `GOT IN` regression, the cheapest proof there is. Then run each new test file explicitly and read the output.
+If wronguser tests existed before this run, run them first. An old wronguser test that is now red is a `GOT IN` regression, the cheapest proof there is. Then run each new test file explicitly and read the output.
 
 | What you saw | Label |
 |---|---|
@@ -102,14 +102,14 @@ For each `GOT IN`, propose the smallest fix at `file:line`, and ask before apply
 
 The tests stay where they are as a permanent regression suite.
 
-## Output: the Nosy Ledger
+## Output: the WrongUser Ledger
 
 ```
-nosy · 6 paths · diff main..HEAD · map: nosy.map.yml (confirmed)
+wronguser · 6 paths · diff main..HEAD · map: wronguser.map.yml (confirmed)
 
-GOT IN        PATCH /api/videos/:id → nosy renamed alice's video
-              tests/nosy/videos.test.ts › "update: alice's row unchanged" FAILED
-              expected title "nosy-canary-7f3a9c", got "pwned"
+GOT IN        PATCH /api/videos/:id → wronguser renamed alice's video
+              tests/wronguser/videos.test.ts › "update: alice's row unchanged" FAILED
+              expected title "wronguser-canary-7f3a9c", got "pwned"
               cause: handler uses supabaseAdmin, so RLS never applies (app/api/videos/[id]/route.ts:14)
               fix: use the user-scoped client at route.ts:14 (not applied)
 MIGHT GET IN  GET /api/renders → cache key omits the user
@@ -118,9 +118,9 @@ BLOCKED       GET, DELETE /api/videos/:id · RLS "videos_owner" supabase/migrati
 BLOCKED       POST /api/videos as alice's user_id · with check on "videos_owner" 0004_rls.sql:10 · test green
 NOT CHECKED   storage bucket "renders" · no local storage emulator
 
-ran: npx vitest run tests/nosy · existing suite: not run
+ran: npx vitest run tests/wronguser · existing suite: not run
 ```
 
 - **Order:** `GOT IN`, then `MIGHT GET IN`, then `BLOCKED`, then `NOT CHECKED`. Group `BLOCKED` paths only when the same invariant and the same evidence cover all of them.
-- **Clean line:** `nosy got nothing. N/N blocked (T by test, S static).` Print it only when every path is `BLOCKED`. A single `MIGHT GET IN` or `NOT CHECKED` means no clean line.
+- **Clean line:** `wronguser got nothing. N/N blocked (T by test, S static).` Print it only when every path is `BLOCKED`. A single `MIGHT GET IN` or `NOT CHECKED` means no clean line.
 - **Closing lines:** end with the commands you ran, any flagged prompt injection, and anything outside scope, one line each.

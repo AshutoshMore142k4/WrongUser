@@ -10,10 +10,10 @@ Diff adds a `projects` table and a `GET /api/projects/:id` handler that queries 
 10   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 ```
 
-Nosy's pgTAP test, run with `supabase test db`: as `nosy`, `select`, `update` and `delete` on alice's row return 0 rows affected; an insert with `user_id = alice` is rejected.
+WrongUser's pgTAP test, run with `supabase test db`: as `wronguser`, `select`, `update` and `delete` on alice's row return 0 rows affected; an insert with `user_id = alice` is rejected.
 
 ```
-nosy · 4 paths tried on this diff
+wronguser · 4 paths tried on this diff
 BLOCKED      4 paths: read, update, delete, owner_id overwrite
              RLS "projects_owner" (supabase/migrations/0004_rls.sql:9-10), pgTAP green
 ```

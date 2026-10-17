@@ -11,13 +11,13 @@ export async function GET(req, { params }) {
 
 `supabaseAdmin` uses the service role, so RLS never applies; no owner filter in the query.
 
-Nosy writes `tests/nosy/videos.test.ts`: alice creates a video titled with a canary (`nosy-canary-7f3a9c`), `nosy` creates its own. Control: `nosy` can `GET` its own video. Attack: `nosy` calls `GET /api/videos/<alice's id>` and asserts the canary is not in the response.
+WrongUser writes `tests/wronguser/videos.test.ts`: alice creates a video titled with a canary (`wronguser-canary-7f3a9c`), `wronguser` creates its own. Control: `wronguser` can `GET` its own video. Attack: `wronguser` calls `GET /api/videos/<alice's id>` and asserts the canary is not in the response.
 
 ```
-nosy · 1 path tried on this diff
-GOT IN       GET /api/videos/:id → nosy read alice's video
-             tests/nosy/videos.test.ts › "read: canary never reaches nosy" FAILED
-             response contained "nosy-canary-7f3a9c" (control: nosy reads own video, passed)
+wronguser · 1 path tried on this diff
+GOT IN       GET /api/videos/:id → wronguser read alice's video
+             tests/wronguser/videos.test.ts › "read: canary never reaches wronguser" FAILED
+             response contained "wronguser-canary-7f3a9c" (control: wronguser reads own video, passed)
 ```
 
 Proposed fix (asked before editing): use the user-scoped client, or add `.eq('user_id', session.userId)`. Re-run: test green.

@@ -1,6 +1,6 @@
 # Eval plan — two-account bench
 
-**Question:** does Nosy find real cross-user leaks, with fewer false alarms, than a plain agent given the same prompt ("review this for access-control bugs")?
+**Question:** does WrongUser find real cross-user leaks, with fewer false alarms, than a plain agent given the same prompt ("review this for access-control bugs")?
 
 ## Fixture: Leaky Bakery (not built yet)
 
@@ -8,11 +8,11 @@ Next.js + Supabase app, one planted leak per seam (direct ID, list filter, RLS g
 
 ## Runs
 
-For every case, N runs per arm (plain agent vs Nosy). Score:
-- **Recall**: planted leaks reported as real (Nosy: `GOT IN` only).
+For every case, N runs per arm (plain agent vs WrongUser). Score:
+- **Recall**: planted leaks reported as real (WrongUser: `GOT IN` only).
 - **False alarms**: decoys reported as leaks.
 - **Honesty**: any `GOT IN`/pass claimed without an executed test counts as a failure.
 
 ## Kill rule
 
-Stop if Nosy does not beat the plain agent on false alarms at equal-or-better recall, if `GOT IN` is mostly false alarms, or if only a static-only version can ship. Publish numbers whatever they are.
+Stop if WrongUser does not beat the plain agent on false alarms at equal-or-better recall, if `GOT IN` is mostly false alarms, or if only a static-only version can ship. Publish numbers whatever they are.
