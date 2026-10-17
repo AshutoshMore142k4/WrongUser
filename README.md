@@ -1,6 +1,6 @@
 # WrongUser
 
-[![Skills](https://skills.sh/b/AshutoshMore142k4/nosy)](https://skills.sh/AshutoshMore142k4/nosy)
+[![WrongUser](https://img.shields.io/badge/WrongUser-Cross--User%20Security-7C3AED?style=for-the-badge&logo=github&logoColor=white)](https://github.com/AshutoshMore142k4/WrongUser) [![Skills.sh](https://img.shields.io/badge/Skills.sh-Install%20Skill-black?style=for-the-badge)](https://skills.sh/AshutoshMore142k4/WrongUser)
 
 **Suspect at the seams. Believe only red.**
 
