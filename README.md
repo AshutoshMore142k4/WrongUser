@@ -1,6 +1,6 @@
 # WrongUser
 
-[![WrongUser](https://img.shields.io/badge/WrongUser-Cross--User%20Security-7C3AED?style=for-the-badge&logo=github&logoColor=white)](https://github.com/AshutoshMore142k4/WrongUser) [![Skills.sh](https://img.shields.io/badge/Skills.sh-Install%20Skill-black?style=for-the-badge)](https://skills.sh/AshutoshMore142k4/WrongUser)
+[![WrongUser](https://img.shields.io/badge/WrongUser-Cross--User%20Security-7C3AED?style=for-the-badge&logo=github&logoColor=white)](https://github.com/AshutoshMore142k4/WrongUser) [![Skills.sh](https://img.shields.io/badge/Skills.sh-Install%20Skill-black?style=for-the-badge)](https://www.skills.sh/ashutoshmore142k4/wronguser/wronguser)
 
 **Suspect at the seams. Believe only red.**
 
@@ -33,8 +33,10 @@ wronguser got nothing. 14/14 blocked (9 by test, 5 static).
 **skills.sh**
 
 ```bash
-npx skills add AshutoshMore142k4/nosy
+npx skills add AshutoshMore142k4/WrongUser
 ```
+
+Listing: [skills.sh/ashutoshmore142k4/wronguser/wronguser](https://www.skills.sh/ashutoshmore142k4/wronguser/wronguser)
 
 **Claude Code (by hand)**
 
